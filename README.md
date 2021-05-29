@@ -12,6 +12,10 @@ The command, assuming you picked OpenBLAS and are using g++, is:
 
 g++ obelisk-backend.cpp -O3 -lClp -lCoinUtils -lClpSolver -lpqxx -lopenblas -o obelisk-backend
 
+Then run it with:
+
+./obelisk-backend [database name] [database password]
+
 Tested on Debian.
 
 It will be able to handle many thousands of recipes and resources using a reasonable amount of RAM, and
