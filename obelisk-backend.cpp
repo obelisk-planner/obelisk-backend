@@ -52,7 +52,7 @@ int get_rr_inv_pair(double** input_mat, double** inv, compressed_rrmat* lhs, int
       }
     }
     
-    //cout << "\n" << largest_abs.first << ", " << largest_abs.second;
+    // cout << "\n" << largest_abs.first << ", " << largest_abs.second;
     
     if (largest_abs.first != -1) {
       swap_pointers(&input_mat[i],&input_mat[largest_abs.first]);
@@ -72,6 +72,7 @@ int get_rr_inv_pair(double** input_mat, double** inv, compressed_rrmat* lhs, int
       if (j != i && input_mat[j][i] != 0) {
         cblas_daxpy(dim,-input_mat[j][i],inv[i],1,inv[j],1);
         cblas_daxpy(dim-i,-input_mat[j][i],(double*) input_mat[i]+i,1,(double*) input_mat[j]+i,1);
+          //Problem with input_mat[98][183]?
       }
     }
   }
@@ -139,7 +140,7 @@ int active_set_alg(compressed_rrmat* lhs, int num_rows, double** inv, double* so
     }
     
     // Look for the first constraint we hit on the way to the subproblem solution.
-    // Because they're all positivity contraints this takes a simpler form.
+    // Because all inactive constraints are positivity contraints this takes a simpler form.
     
     cblas_dcopy(variables,kkt_solution,1,search_dir,1);
     cblas_daxpy(variables,-1,solution,1,search_dir,1);
@@ -245,7 +246,7 @@ int main_algorithm(double* this_solution) {
     }
   }
   
-  for (int i = 0; i < constraints; i++) {
+  for (int i = 0; i < variables; i++) {
     t_tech_matrix[i] = new pair < int, double > [variable_rows[i]];
   }
   
@@ -459,7 +460,7 @@ int main_algorithm(double* this_solution) {
   for (int i = 0; i < variables; i++) {
     if (i < num_recipes) {
       if (utility_slopes[i] != 0) {
-        kkt[i][i] = utility_slopes[i];
+        kkt[i][i] = -utility_slopes[i];
       }
     }
   }
@@ -478,7 +479,8 @@ int main_algorithm(double* this_solution) {
      
      I put "inverse" in quotes because kkt may be singular, in which a case it will
      only be row reduced echlon at the end of elimination rather than the identity. This still
-     allows us to get a solution with matrix multiplication, as long as a solution exists. */
+     allows us to get a solution with matrix-vector multiplication, as long as a solution exists.
+  */
   
   compressed_rrmat* kkt_rrmat = new compressed_rrmat;
   
