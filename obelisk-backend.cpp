@@ -161,8 +161,9 @@ int active_set_alg(compressed_rrmat* lhs, int num_rows, double** inv, double* so
     if (first_barrier.second == -1.0) {
       return 0; // The subproblem solution is feasible. Return.
     } else {
-      
-      update_inv(lhs, &num_rows, inv, variables+constraints, first_barrier.first); // Add the newly active constraint to the problem and restart.
+
+      // Add the newly active constraint to the problem and restart.
+      update_inv(lhs, &num_rows, inv, variables+constraints, first_barrier.first); 
     }
     
   }
@@ -197,32 +198,33 @@ int update_inv(compressed_rrmat* lhs, int* num_rows, double** inv, int inv_cols,
   
   map <int, double*>::iterator current_col = lhs->get_col_exact(new_active);
   
-  if (current_col == --(lhs->cols.end()) ) {
+  if (current_col == lhs->cols.end() ) {
   
     current_col = lhs->get_next_col(new_active);
     
     lhs->rr_daxpy(-1, current_col, new_active, *num_rows);
     cblas_daxpy(inv_cols, -1, inv[new_active], 1, inv[*num_rows-1], 1);
     
-  } else {
+  } else { // The new active constraint corresponds to a singular column. Swap the 1 into it's diagonal value.
   
-    lhs->set_elem(new_active, current_col, 1);
+    lhs->set_elem(*num_rows, current_col, 1);
     
     lhs->rr_dswap(current_col, new_active, *num_rows);
-    swap_pointers(&inv[new_active], &inv[*num_rows - 1]);
+    swap_pointers(&inv[new_active], &inv[*num_rows-1]);
   }
   
   for (current_col; current_col != lhs->cols.end(); ++current_col) {
   
     double leading_value = lhs->get_elem(new_active, current_col);
     
-    if (leading_value != 0) {  //  If this is false, the row remains (or becomes, in new column) a zero row.
+    if (leading_value != 0) {  //  If this evaluates as false, the row remains (or becomes, in new column) a zero row.
     
       lhs->rr_dscal(1/leading_value, current_col, *num_rows);
-      cblas_dscal(inv_cols, 1/leading_value, inv[current_col->first], 1);
+      cblas_dscal(inv_cols, 1/leading_value, inv[current_col->first-1], 1);
       
-      lhs->rr_dswap(current_col, current_col->first, *num_rows);
-      swap_pointers(&inv[new_active], &inv[*num_rows]);
+      // Remember that the row wouldn't be stored if the diagonal was nonzero, so this leaves a zero in the new row.
+      lhs->rr_dswap(current_col, current_col->first, *num_rows); 
+      swap_pointers(&inv[new_active], &inv[*num_rows-1]);
       column_collapse(lhs, current_col, inv, inv_cols);
     }
   }
@@ -293,6 +295,33 @@ int main_algorithm(double* this_solution) {
   
   */
   
+  /* If uncommented, print the transposed tech matrix for debugging instead.
+  
+  double** print_matrix = new double*[variables];
+  for (int i = 0; i < variables; i++) {
+    print_matrix[i] = new double[constraints];
+    for (int j = 0; j < constraints; j++) {
+      print_matrix[i][j] = 0;
+    }
+  }
+  
+  for (int i = 0; i < variables; i++) {
+    for (int j = 0; j < variable_rows[i]; j++) {
+      print_matrix[i][t_tech_matrix[i][j].first] = t_tech_matrix[i][j].second;
+    }
+  }
+  
+  for (int i = 0; i < variables; i++) {
+    for (int j = 0; j < constraints; j++) {
+      cout << "\t" << print_matrix[i][j] << "\t";
+    }
+    cout << "\n";
+  }
+  
+  return 0;
+  
+  */
+  
   double* init_solution_rhs_l = new double[constraints+variables];
   memset(init_solution_rhs_l, 0, sizeof(double) * (constraints + variables) );
   double* init_solution_rhs_u = new double[constraints+variables];
@@ -331,7 +360,6 @@ int main_algorithm(double* this_solution) {
   init_solution_model.setOptimizationDirection(-1);
   init_solution_model.loadProblem(init_solution_mat,NULL,
     NULL,init_solution_objs,init_solution_rhs_l,init_solution_rhs_u);
-  //init_solution_model.setInfeasibilityCost(1.0e25); // Workaround for minor CLP glitch.
   
   init_solution_model.primal();
   double* init_solution = init_solution_model.primalColumnSolution();

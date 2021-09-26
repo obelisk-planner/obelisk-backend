@@ -49,10 +49,10 @@ class compressed_rrmat {
     
     int get_elem (int row_num, map <int, double*>::iterator col_pointer) {
       
-      if (col_pointer == cols.end()) {
+      if (col_pointer == this->cols.end()) {
         exit(1);
       } else {
-        if (col_pointer == this->cols.end()) { // Is this the new column? If so, it's a straight map from row to element.
+        if (col_pointer == --(this->cols.end())) { // Is this the new column? If so, it's a straight map from row to element.
           return col_pointer->second[row_num];
         } else {
           if (row_num == this->cols.end()->first) {  // Is this the new row? If so, use the devoted final element of the array.
@@ -66,13 +66,13 @@ class compressed_rrmat {
     
     int set_elem (int row_num, map <int, double*>::iterator col_pointer, double new_val) {
       
-      if (col_pointer == cols.end()) {
+      if (col_pointer == this->cols.end()) {
         return 1;
       } else {
-        if (col_pointer == this->cols.end()) { // Is this the new column? If so, it's a straight map from row to element.
+        if (col_pointer == --(this->cols.end())) { // Is this the new column? If so, it's a straight map from row to element.
            col_pointer->second[row_num] = new_val;
         } else {
-          if (row_num == this->cols.end()->first) {  // Is this the new row? If so, use the devoted final element of the array.
+          if (row_num == (--(this->cols.end()))->first) {  // Is this the new row? If so, use the devoted final element of the array.
             col_pointer->second[col_pointer->first] = new_val;
           } else {
             col_pointer->second[row_num] = new_val;
