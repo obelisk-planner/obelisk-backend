@@ -10,7 +10,7 @@ is found using coin-or CLP.
 To compile this, you will need to have BLAS, coin-or CLP, pqxx and obelisk-frontend set up. 
 The command, assuming you picked OpenBLAS and are using g++, is:
 
-g++ obelisk-backend.cpp -O3 -lClp -lCoinUtils -lClpSolver -lpqxx -lopenblas -o obelisk-backend
+g++ obelisk-backend.cpp obelisk-quadratic-solve.cpp -O3 -lClp -lCoinUtils -lClpSolver -lpqxx -lopenblas -o obelisk-backend
 
 Then run it with:
 

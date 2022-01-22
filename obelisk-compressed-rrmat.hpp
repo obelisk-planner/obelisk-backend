@@ -15,6 +15,19 @@ class compressed_rrmat {
     followed by a zero on the main diagonal, and then a value for the new row. The new column is key+1 in size because the
     new row is on the diagonal, and the final value of the new column is unused unless it becomes an ordinary column later on.
     (The final value of the new column corresponds to some hypothetical future new row)
+    
+    A diagram of a possible compressed_rrmat, with the new column at 7:
+    
+    0 3 4 7
+    
+    0 # # #
+      # # #
+      # # #
+      0 # #
+        0 #
+          #
+    # # # #
+          0
   */
     
   public:
@@ -47,7 +60,7 @@ class compressed_rrmat {
       return 0;
     }
     
-    int get_elem (int row_num, map <int, double*>::iterator col_pointer) {
+    double get_elem (int row_num, map <int, double*>::iterator col_pointer) {
       
       if (col_pointer == this->cols.end()) {
         exit(1);
@@ -55,8 +68,8 @@ class compressed_rrmat {
         if (col_pointer == --(this->cols.end())) { // Is this the new column? If so, it's a straight map from row to element.
           return col_pointer->second[row_num];
         } else {
-          if (row_num == this->cols.end()->first) {  // Is this the new row? If so, use the devoted final element of the array.
-            return col_pointer->second[col_pointer->first];
+          if (row_num == (--(this->cols.end()))->first-1) {  // Is this the new row? If so, use the devoted final element of the array.
+            return col_pointer->second[col_pointer->first+1];
           } else {
             return col_pointer->second[row_num];
           }
@@ -72,8 +85,8 @@ class compressed_rrmat {
         if (col_pointer == --(this->cols.end())) { // Is this the new column? If so, it's a straight map from row to element.
            col_pointer->second[row_num] = new_val;
         } else {
-          if (row_num == (--(this->cols.end()))->first) {  // Is this the new row? If so, use the devoted final element of the array.
-            col_pointer->second[col_pointer->first] = new_val;
+          if (row_num == (--(this->cols.end()))->first-1) {  // Is this the new row? If so, use the devoted final element of the array.
+            col_pointer->second[col_pointer->first+1] = new_val;
           } else {
             col_pointer->second[row_num] = new_val;
           }
